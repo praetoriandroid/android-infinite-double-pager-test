@@ -20,7 +20,6 @@ import static android.support.v4.view.ViewPager.SCROLL_STATE_IDLE;
 
 public class InfinitePagerActivity extends AppCompatActivity {
 
-    @SuppressLint("SetTextI18n")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,18 +32,6 @@ public class InfinitePagerActivity extends AppCompatActivity {
                 new FrameLayout(this),
                 new FrameLayout(this)
         };
-        TextView tv = new TextView(this);
-        tv.setText("#0");
-        pageContainers[0].addView(tv);
-        tv = new TextView(this);
-        tv.setText("#1");
-        pageContainers[1].addView(tv);
-        tv = new TextView(this);
-        tv.setText("#2");
-        pageContainers[2].addView(tv);
-        tv = new TextView(this);
-        tv.setText("#3");
-        pageContainers[3].addView(tv);
         pager.setAdapter(new PagerAdapter() {
 
             @Override
