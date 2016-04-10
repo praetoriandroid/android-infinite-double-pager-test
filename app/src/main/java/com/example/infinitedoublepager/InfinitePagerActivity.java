@@ -15,10 +15,15 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
-import static android.support.v4.view.ViewPager.SCROLL_STATE_DRAGGING;
 import static android.support.v4.view.ViewPager.SCROLL_STATE_IDLE;
 
 public class InfinitePagerActivity extends AppCompatActivity {
+
+    private static final int NOT_SET = -1;
+
+    private ViewGroup[] pageContainers;
+    private View primaryPage;
+    private View secondaryPage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,7 +31,7 @@ public class InfinitePagerActivity extends AppCompatActivity {
         ViewPager pager = new ViewPager(this);
         setContentView(pager);
 
-        final ViewGroup[] pageContainers = {
+        pageContainers = new ViewGroup[]{
                 new FrameLayout(this),
                 new FrameLayout(this),
                 new FrameLayout(this),
@@ -58,66 +63,79 @@ public class InfinitePagerActivity extends AppCompatActivity {
                 container.removeView(pageContainers[position % 4]);
             }
         });
-        pager.setCurrentItem((Integer.MAX_VALUE / 2) & 0xfffffffc);
+        final int initialPosition = Integer.MAX_VALUE / 2 - (Integer.MAX_VALUE / 2) % 4;
+        pager.setCurrentItem(initialPosition);
 
-        final TextView even = new PageContentView(this, 0xff6060ff, "even");
-        Log.d("###", "even: " + even);
-        final TextView odd = new PageContentView(this, 0xffff6060, "odd");
-        Log.d("###", "odd: " + odd);
-        pageContainers[0].addView(even);
-        pageContainers[1].addView(odd);
+        primaryPage = new PageContentView(this, 0xff6060ff, "even");
+        Log.d("###", "even: " + primaryPage);
+        secondaryPage = new PageContentView(this, 0xffff6060, "odd");
+        Log.d("###", "odd: " + secondaryPage);
+        pageContainers[0].addView(primaryPage);
         pager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-
-            boolean startScrolling = true;
-            boolean scrollToLeftPage;
-            int lastPosition;
+            int primaryPosition = initialPosition;
+            int secondaryPosition = NOT_SET;
+            int selectedPosition = NOT_SET;
 
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
                 Log.d("###", "onPageScrolled(" + position + ", " + positionOffset + ", " + positionOffsetPixels + ")");
-                if (positionOffsetPixels != 0) {
-                    lastPosition = position;
-                    if (startScrolling) {
-                        int halfWidth = even.getMeasuredWidth() / 2;
-                        scrollToLeftPage = positionOffsetPixels > halfWidth;
-                        Log.d("###", "start scrolling: scroll to the " + (scrollToLeftPage ? "left" : "right") + " page");
-                        if (scrollToLeftPage) {
-                            int page = position % 4;
-                            int rightContainer = (page + 2) % 4;
-                            Log.d("###", "page: " + page + ", right page: " + rightContainer);
-                            View rightPage = rightContainer % 2 == 0 ? even : odd;
-                            pageContainers[rightContainer].removeView(rightPage);
-                            pageContainers[page].addView(rightPage);
-                        }
-                        startScrolling = false;
+                if (positionOffsetPixels == 0) {
+                    selectedPosition = position;
+                    return;
+                }
+
+                int secondaryPageOffset = position == primaryPosition ? 1 : -1;
+                int currentSecondaryPosition = primaryPosition + secondaryPageOffset;
+                if (secondaryPosition != currentSecondaryPosition) {
+                    if (secondaryPosition != NOT_SET) {
+                        removePage(secondaryPosition, secondaryPage);
                     }
+                    addPage(currentSecondaryPosition, secondaryPage);
+                    secondaryPosition = currentSecondaryPosition;
                 }
             }
 
             @Override
             public void onPageSelected(int position) {
                 Log.d("###", "onPageSelected(" + position + ")");
+                selectedPosition = position;
             }
 
             @Override
             public void onPageScrollStateChanged(int state) {
                 Log.d("###", "onPageScrollStateChanged(" + state + ")");
                 switch (state) {
-                    case SCROLL_STATE_DRAGGING:
-                        break;
                     case SCROLL_STATE_IDLE:
-                        Log.d("###", "stop scrolling (to the " + (scrollToLeftPage ? "left" : "right") + " page)");
-                        if (!scrollToLeftPage) {
-                            int previousContainer = lastPosition % 4;
-                            int rightContainer = (previousContainer + 2) % 4;
-                            Log.d("###", "previous page: " + previousContainer + ", now right page: " + rightContainer);
-                            View previousPage = previousContainer % 2 == 0 ? even : odd;
-                            pageContainers[previousContainer].removeView(previousPage);
-                            pageContainers[rightContainer].addView(previousPage);
+//                        Log.d("###", "stop scrolling (to the " + (scrollToLeftPage ? "left" : "right") + " page)");
+                        boolean pageSelectionChanged = primaryPosition != selectedPosition;
+                        Log.d("###", "stop scrolling: page" + (pageSelectionChanged ? "" : " not") + " changed, primary: " + primaryPosition + "[" + primaryPage + "], secondary: " + secondaryPosition + "[" + secondaryPage + "], selected: " + selectedPosition);
+                        if (pageSelectionChanged) {
+                            swapPrimaryPage();
+                            secondaryPosition = primaryPosition;
+                            primaryPosition = selectedPosition;
                         }
-                        startScrolling = true;
+                        if (secondaryPosition != NOT_SET) {
+                            removePage(secondaryPosition, secondaryPage);
+                        }
+                        secondaryPosition = NOT_SET;
                         break;
                 }
+            }
+
+            private void removePage(int position, View page) {
+                Log.d("###", "removePage(" + position + ", " + page + ")");
+                pageContainers[position % 4].removeView(page);
+            }
+
+            private void addPage(int position, View page) {
+                Log.d("###", "addPage(" + position + ", " + page + ")");
+                pageContainers[position % 4].addView(page);
+            }
+
+            private void swapPrimaryPage() {
+                View page = primaryPage;
+                primaryPage = secondaryPage;
+                secondaryPage = page;
             }
         });
     }
@@ -142,8 +160,13 @@ public class InfinitePagerActivity extends AppCompatActivity {
 
         @Override
         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-            Log.d("###", getText() + "onMeasure()");
+            Log.d("###", getText() + ": onMeasure()");
             super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        }
+
+        @Override
+        public String toString() {
+            return Integer.toHexString(System.identityHashCode(this));
         }
     }
 }
