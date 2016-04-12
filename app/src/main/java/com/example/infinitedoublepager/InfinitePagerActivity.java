@@ -24,7 +24,7 @@ public class InfinitePagerActivity extends AppCompatActivity {
         Log.d("###", "even: " + primaryPage);
         View secondaryPage = new PageContentView(this, 0xffff6060, "odd");
         Log.d("###", "odd: " + secondaryPage);
-        TwoPageCarousel carousel = new TwoPageCarousel(this, primaryPage, secondaryPage);
+        TwoPageCarousel carousel = new TwoPageCarousel(primaryPage, secondaryPage);
         carousel.setupPager(pager);
     }
 

@@ -19,9 +19,10 @@ public class TwoPageCarousel {
     private View primaryPage;
     private View secondaryPage;
 
-    public TwoPageCarousel(Context context, View primaryPage, View secondaryPage) {
+    public TwoPageCarousel(View primaryPage, View secondaryPage) {
         this.primaryPage = primaryPage;
         this.secondaryPage = secondaryPage;
+        Context context = primaryPage.getContext();
         pageContainers = new ViewGroup[]{
                 new FrameLayout(context),
                 new FrameLayout(context),
