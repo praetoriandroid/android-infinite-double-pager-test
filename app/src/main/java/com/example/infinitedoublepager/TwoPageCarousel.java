@@ -22,6 +22,9 @@ public class TwoPageCarousel {
     public TwoPageCarousel(View primaryPage, View secondaryPage) {
         this.primaryPage = primaryPage;
         this.secondaryPage = secondaryPage;
+    }
+
+    public void setupPager(ViewPager pager) {
         Context context = primaryPage.getContext();
         pageContainers = new ViewGroup[]{
                 new FrameLayout(context),
@@ -30,9 +33,7 @@ public class TwoPageCarousel {
                 new FrameLayout(context)
         };
         pageContainers[0].addView(primaryPage);
-    }
 
-    public void setupPager(ViewPager pager) {
         pager.setAdapter(new CarouselPagerAdapter());
         pager.addOnPageChangeListener(new PageJuggler());
         pager.setCurrentItem(INITIAL_POSITION);
