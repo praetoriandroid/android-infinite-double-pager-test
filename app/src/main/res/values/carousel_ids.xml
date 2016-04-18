@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="carousel_first_container" type="id"/>
+    <item name="carousel_second_container" type="id"/>
+</resources>
